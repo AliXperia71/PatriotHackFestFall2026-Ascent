@@ -1,0 +1,18 @@
+.app { display: flex; flex-direction: column; height: 100vh; }
+header { display: flex; gap: 16px; align-items: baseline; padding: 8px 16px; background: #14202e; color: #fff; }
+header h1 { margin: 0; font-size: 1.4rem; }
+.banner { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 16px; background: #ddd; }
+.banner.ok { background: #d8f3e2; }
+.banner.bad { background: #f9d6d6; font-weight: 600; }
+.banner-buttons { display: flex; gap: 8px; }
+button.danger { background: #d63a3a; color: #fff; border-color: #a22; }
+main { flex: 1; display: grid; grid-template-columns: 1fr 520px; min-height: 0; }
+.map { height: 100%; width: 100%; }
+aside { overflow: auto; padding: 8px 12px; background: #fff; }
+table { border-collapse: collapse; width: 100%; font-size: 0.8rem; }
+th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #e3e5e8; vertical-align: top; }
+.badge { color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; white-space: nowrap; }
+.check { font-size: 0.7rem; margin-top: 4px; color: #444; }
+.error { color: #b00; padding: 4px 16px; }
+.hint { color: #667; }
+footer { padding: 4px 16px; font-size: 0.75rem; color: #667; background: #eceef1; }
