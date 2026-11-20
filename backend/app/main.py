@@ -8,11 +8,16 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import config, ledger as ledger_mod, simulator
+from . import config, forecast, ledger as ledger_mod, migrate, pilot, simulator
 from .ledger import Ledger, RawEntry, check_entry
 from .models import (
     EntryCheck,
     EntryStatus,
+    ForecastSummary,
+    GroupResult,
+    MigratePlan,
+    ZoneForecast,
+    ZoneOptions,
     Reading,
     ReadingOut,
     TamperRequest,
@@ -121,6 +126,36 @@ def create_app(db_path: Path | str | None = None, demo_mode: bool | None = None)
             first_bad_index=result.first_bad_index, message=msg,
         )
 
+    def current_forecast() -> ForecastSummary:
+        entries, _, st = snapshot()
+        return forecast.forecast_all(entries, st)
+
+    def check_zone(zone_id: str | None) -> None:
+        if zone_id is not None and zone_id not in config.ZONES:
+            raise HTTPException(404, f"unknown zone {zone_id}")
+
+    @app.get("/api/forecast", response_model=ForecastSummary)
+    def get_forecast(zone_id: str | None = None):
+        check_zone(zone_id)
+        fc = current_forecast()
+        if zone_id is not None:
+            fc.zones = [z for z in fc.zones if z.zone_id == zone_id]
+        return fc
+
+    @app.get("/api/pilot/options", response_model=list[ZoneOptions])
+    def pilot_options(zone_id: str | None = None):
+        check_zone(zone_id)
+        zones: list[ZoneForecast] = current_forecast().zones
+        return [pilot.score_options(z) for z in zones if zone_id in (None, z.zone_id)]
+
+    @app.get("/api/pilot/group", response_model=GroupResult)
+    def pilot_group():
+        return pilot.select_group()
+
+    @app.get("/api/migrate/plan", response_model=MigratePlan)
+    def migrate_plan():
+        return migrate.plan(current_forecast())
+
     def default_tamper_index() -> int:
         """A fixed mid-chain reading in Z-NORTH-3, so the demo looks the same each time."""
         entries = led.all_entries()
@@ -132,6 +167,15 @@ def create_app(db_path: Path | str | None = None, demo_mode: bool | None = None)
         require_demo()
         req = req or TamperRequest()
         idx = req.index if req.index is not None else default_tamper_index()
+        # The tamper must keep the reading the right shape, so the UI can still show it.
+        # (It only breaks the signature, which is the point.)
+        if req.field not in Reading.model_fields:
+            raise HTTPException(404, f"no field {req.field}")
+        numeric = req.field in config.PRECISION or req.field in config.INT_FIELDS
+        if numeric and (isinstance(req.value, bool) or not isinstance(req.value, (int, float))):
+            raise HTTPException(422, f"{req.field} needs a number")
+        if not numeric and not isinstance(req.value, str):
+            raise HTTPException(422, f"{req.field} needs text")
         try:
             old, new = led.tamper(idx, req.field, req.value)
         except KeyError as exc:

@@ -21,3 +21,21 @@ def led(tmp_path):
 @pytest.fixture()
 def registry():
     return simulator.public_registry()
+
+
+@pytest.fixture(scope="session")
+def full_ledger(tmp_path_factory):
+    """The full demo ledger (2880 entries), built once."""
+    ledger = Ledger(tmp_path_factory.mktemp("full") / "full.db")
+    simulator.generate_ledger(ledger)
+    return ledger
+
+
+@pytest.fixture(scope="session")
+def clean_forecast(full_ledger):
+    from app import forecast
+    from app.ledger import verify_chain
+
+    entries = full_ledger.all_entries()
+    _, st = verify_chain(entries, simulator.public_registry())
+    return forecast.forecast_all(entries, st)

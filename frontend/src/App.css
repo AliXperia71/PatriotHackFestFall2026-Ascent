@@ -16,3 +16,17 @@ th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #e3e5e8; v
 .error { color: #b00; padding: 4px 16px; }
 .hint { color: #667; }
 footer { padding: 4px 16px; font-size: 0.75rem; color: #667; background: #eceef1; }
+header nav { margin-left: auto; display: flex; gap: 6px; }
+.tab { background: transparent; color: #cfd8e3; border-color: #3a4a5e; }
+.tab.active { background: #fff; color: #14202e; font-weight: 600; }
+.cbar { display: flex; height: 14px; background: #eef0f3; border-radius: 3px; overflow: hidden; width: 100%; }
+.cbar > div { height: 100%; }
+.legend { display: flex; gap: 12px; font-size: 0.75rem; margin: 4px 0; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; }
+.chart { margin: 8px 0; }
+.chart figcaption { font-size: 0.8rem; margin-bottom: 2px; }
+.chart svg { width: 100%; height: auto; background: #fafbfc; border: 1px solid #e3e5e8; border-radius: 4px; }
+.callout { background: #d8f3e2; padding: 6px 10px; border-radius: 6px; }
+tr.sel { background: #eef5fb; }
+.wave-row { display: grid; grid-template-columns: 60px 1fr 60px; gap: 8px; align-items: center; font-size: 0.8rem; margin: 3px 0; }
+h4 { margin: 12px 0 4px; }

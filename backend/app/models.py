@@ -82,3 +82,112 @@ class ZoneOut(BaseModel):
     lon: float
     status: EntryStatus
     latest: ReadingOut | None
+
+
+# ---------------- Forecast ----------------
+class BandPoint(BaseModel):
+    day: int
+    mid: float
+    lo: float
+    hi: float
+
+
+class SeriesForecast(BaseModel):
+    metric: Literal["pm25_ugm3", "radiation_usv_h"]
+    threshold: float
+    observed: list[tuple[int, float]]  # (day, daily mean)
+    projected: list[BandPoint]
+    fit: dict[str, float]              # y = c + a * exp(-k * day)
+    current: float                     # latest observed daily mean
+    cross_day: int | None              # first day the fit is at/below threshold
+    cross_lo: int | None
+    cross_hi: int | None
+
+
+class ZoneForecast(BaseModel):
+    zone_id: str
+    name: str
+    ok: bool
+    message: str
+    days_used: int
+    last_day: int
+    pm25: SeriesForecast | None = None
+    radiation: SeriesForecast | None = None
+    safe_day: int | None = None
+    safe_day_lo: int | None = None
+    safe_day_hi: int | None = None
+    safe_date: str | None = None
+
+
+class ForecastSummary(BaseModel):
+    zones: list[ZoneForecast]
+    first_safe_zone: str | None
+    ranking: list[str]   # zone ids, soonest safe first
+    note: str
+
+
+# ---------------- Pilot ----------------
+class OptionScore(BaseModel):
+    option: str
+    total: float
+    viable: bool
+    contributions: dict[str, float]   # weight * normalized value
+    normalized: dict[str, float]
+    raw: dict[str, float]
+
+
+class ZoneOptions(BaseModel):
+    zone_id: str
+    recommended: str | None
+    options: list[OptionScore]
+    weights: dict[str, float]
+    note: str
+
+
+class Candidate(BaseModel):
+    person_id: str
+    age: int
+    health: float
+    skill: str
+    level: int
+    years_below: int
+    volunteer: bool
+
+
+class ChosenPerson(BaseModel):
+    person: Candidate
+    score: float
+    contributions: dict[str, float]
+
+
+class GroupResult(BaseModel):
+    selected: list[ChosenPerson]
+    pool_size: int
+    eligible: int
+    excluded: dict[str, int]   # reason -> count
+    band_size: int
+    band_cutoff: float
+    weights: dict[str, float]
+    seed: int
+    method: str
+
+
+# ---------------- Migrate ----------------
+class WaveRow(BaseModel):
+    wave: int
+    day: int
+    date: str
+    level: int
+    destination: str
+    population: int
+
+
+class MigratePlan(BaseModel):
+    rows: list[WaveRow]
+    zone_open_wave: dict[str, int | None]
+    placed: int
+    unplaced: dict[int, int]
+    total_population: int
+    wave_totals: dict[int, int]
+    limits: dict[str, int]
+    method: str
